@@ -6,12 +6,6 @@ import { useEffect, useRef, useState } from 'react'
 export default function Home() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [glowIntensity, setGlowIntensity] = useState(0.5)
-    const [isHovered, setIsHovered] = useState(false)
-
-    const handleHover = () => {
-        setIsHovered(true)
-        setTimeout(() => setIsHovered(false), 1000)
-    }
 
     useEffect(() => {
         if (canvasRef.current) {
