@@ -1,101 +1,164 @@
-import Image from "next/image";
+'use client'
+
+import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const [glowIntensity, setGlowIntensity] = useState(0.5)
+    const [isHovered, setIsHovered] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    const handleHover = () => {
+        setIsHovered(true)
+        setTimeout(() => setIsHovered(false), 1000)
+    }
+
+    useEffect(() => {
+        if (canvasRef.current) {
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext('2d')
+            if (!ctx) return
+
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+
+            const particles: Particle[] = []
+
+            class Particle {
+                x: number
+                y: number
+                size: number
+                speedX: number
+                speedY: number
+
+                constructor() {
+                    this.x = Math.random() * canvas.width
+                    this.y = Math.random() * canvas.height
+                    this.size = Math.random() * 3 + 1
+                    this.speedX = Math.random() * 3 - 1.5
+                    this.speedY = Math.random() * 3 - 1.5
+                }
+
+                update(mouseX: number, mouseY: number) {
+                    this.x += this.speedX + (mouseX - this.x) * 0.10
+                    this.y += this.speedY + (mouseY - this.y) * 0.10
+
+                    if (this.size > 0.2) this.size -= 0.1
+                }
+
+                draw() {
+                    ctx!.fillStyle = 'rgba(31,30,30,0.8)'
+                    ctx!.beginPath()
+                    ctx!.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+                    ctx!.fill()
+                }
+            }
+
+            const init = () => {
+                for (let i = 0; i < 100; i++) {
+                    particles.push(new Particle())
+                }
+            }
+
+            let mouseX = 0
+            let mouseY = 0
+
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.x
+                mouseY = e.y
+            })
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update(mouseX, mouseY)
+                    particles[i].draw()
+                }
+                requestAnimationFrame(animate)
+            }
+
+            init()
+            animate()
+
+            return () => {
+                window.removeEventListener('mousemove', () => {})
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        const glowAnimation = () => {
+            setGlowIntensity((prev) => {
+                const newIntensity = prev + 0.05 * (Math.random() > 0.5 ? 1 : -1)
+                return Math.max(0.3, Math.min(1, newIntensity))
+            })
+        }
+
+        const intervalId = setInterval(glowAnimation, 100)
+
+        return () => clearInterval(intervalId)
+    }, [])
+
+    return (
+        <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden select-none">
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="/herobg.gif?height=1080&width=1920"
+                    alt="Background"
+                    layout="fill"
+                    objectFit="cover"
+                    quality={100}
+                />
+            </div>
+            <canvas
+                ref={canvasRef}
+                className="absolute inset-0 z-10 pointer-events-none"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+            <div className="z-20 flex flex-col items-center space-y-8">
+                <div className="relative w-48 h-48">
+                    <Image
+                        src="/profile.jpg?height=192&width=192"
+                        alt="Profile Picture"
+                        width={192}
+                        height={192}
+                        className="rounded-full"
+                    />
+                    <div className="absolute inset-0 rounded-full shadow-lg shadow-blue-500/50 animate-pulse"/>
+                </div>
+                <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-3xl p-6 max-w-md">
+                    <p className="text-white text-center">
+                        Jr. Admin on Boxhunt
+                    </p>
+                </div>
+                <h1
+                    className="text-6xl font-bold text-center transition-all duration-800 ease-in-out"
+                    style={{
+                        color: '#4228ed',
+                        textShadow: `0 0 ${10 + glowIntensity * 20}px #4228ed, 0 0 ${20 + glowIntensity * 30}px #4228ed, 0 0 ${30 + glowIntensity * 40}px #4228ed`,
+                    }}
+                >
+                    __4iq
+                </h1>
+                <div className="flex space-x-4">
+                    <a
+                        href="https://discord.gg/boxhunt"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transform transition-transform hover:scale-110"
+                    >
+                        <Image src="/discord.svg" alt="Discord" width={48} height={48}/>
+                    </a>
+                    <a
+                        href="https://namemc.com/__4iq"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transform transition-transform hover:scale-110"
+                    >
+                        <Image src="/namemc.svg" alt="NameMC" width={48} height={48}/>
+                    </a>
+                </div>
+            </div>
+        </main>
+    )
 }
+
